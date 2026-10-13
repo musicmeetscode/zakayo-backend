@@ -1,0 +1,19 @@
+# Direct dependencies only, unpinned so installs always get the latest releases.
+# For reproducible deploys, freeze what you tested: pip freeze > requirements.lock
+Django
+djangorestframework
+djangorestframework-simplejwt
+django-cors-headers
+django-dotenv
+django-import-export
+django-jazzmin
+dj-database-url
+drf-yasg
+whitenoise
+pillow
+celery
+redis
+psycopg[binary]
+google-auth
+requests
+uvicorn
