@@ -1,0 +1,5 @@
+Hello {{ customer.full_name }},
+
+Your Zakayo Industries checkout code is: {{ code }}
+
+It expires in {{ minutes }} minutes and can be used once. If you didn't request it, you can ignore this email.

@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     # Third party
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
@@ -68,6 +69,7 @@ INSTALLED_APPS = [
     'accounts',
     'social_auth',
     'api',
+    'shop',
 ]
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
@@ -154,6 +156,12 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_THROTTLE_RATES': {
         'auth': os.environ.get('AUTH_THROTTLE_RATE', '20/min'),
+        # Anonymous website forms: checkout, quote requests, contact, newsletter.
+        'public_forms': os.environ.get('PUBLIC_FORM_THROTTLE_RATE', '10/min'),
+        # Customer order-tracking page and delivery confirmation.
+        'tracking': os.environ.get('TRACKING_THROTTLE_RATE', '30/min'),
+        # Returning-customer lookup at checkout (sends an email code).
+        'customer_lookup': os.environ.get('CUSTOMER_LOOKUP_THROTTLE_RATE', '5/min'),
     },
 }
 
@@ -202,7 +210,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = os.environ.get('TIME_ZONE', 'UTC')
+TIME_ZONE = os.environ.get('TIME_ZONE', 'Africa/Kampala')
 USE_I18N = True
 USE_TZ = True
 
@@ -224,17 +232,54 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Admin
 
-SITE_NAME = os.environ.get('SITE_NAME', 'Django REST Starter')
+SITE_NAME = os.environ.get('SITE_NAME', 'Zakayo Industries')
+# The admin lives at an unlinked path. Set ADMIN_URL to something non-obvious in production, e.g. "zi-console/".
+ADMIN_URL = os.environ.get('ADMIN_URL', 'admin/').strip('/') + '/'
 
 JAZZMIN_SETTINGS = {
-    'site_title': SITE_NAME,
-    'site_brand': f'{SITE_NAME} Admin',
+    'site_title': f'{SITE_NAME} Admin',
+    'site_header': SITE_NAME,
+    'site_brand': SITE_NAME,
+    'site_logo': 'shop/logo-icon-white.png',
+    'site_logo_classes': '',
+    'login_logo': 'shop/logo-white.png',
+    'site_icon': 'shop/favicon.png',
+    'welcome_sign': 'Sign in to manage products, orders and customers',
+    'copyright': 'Zakayo Industries SMC Ltd',
     'user_avatar': None,
-    'show_ui_builder': DEBUG,
-    'hide_apps': ['auth'],
+    'show_ui_builder': False,
+    'hide_apps': ['auth', 'token_blacklist'],
+    'order_with_respect_to': [
+        'shop', 'shop.order', 'shop.quoterequest', 'shop.contactmessage', 'shop.customer', 'shop.product',
+        'shop.category', 'shop.newslettersubscriber', 'shop.emaillog', 'accounts',
+    ],
+    'topmenu_links': [
+        {'name': 'Pending orders', 'url': f'/{ADMIN_URL}shop/order/?status__exact=pending', 'permissions': ['shop.view_order']},
+        {'name': 'New quotes', 'url': f'/{ADMIN_URL}shop/quoterequest/?status__exact=new', 'permissions': ['shop.view_quoterequest']},
+        {'name': 'New messages', 'url': f'/{ADMIN_URL}shop/contactmessage/?status__exact=new', 'permissions': ['shop.view_contactmessage']},
+    ],
     'icons': {
-        'accounts.CustomUser': 'fas fa-user',
+        'accounts.CustomUser': 'fas fa-user-shield',
+        'accounts.ErrorLog': 'fas fa-bug',
+        'shop.Order': 'fas fa-receipt',
+        'shop.QuoteRequest': 'fas fa-file-invoice-dollar',
+        'shop.ContactMessage': 'fas fa-envelope-open-text',
+        'shop.Customer': 'fas fa-hospital-user',
+        'shop.Product': 'fas fa-vial',
+        'shop.Category': 'fas fa-tags',
+        'shop.NewsletterSubscriber': 'fas fa-newspaper',
+        'shop.EmailLog': 'fas fa-paper-plane',
     },
+    'custom_css': 'shop/admin.css',
+    'changeform_format': 'horizontal_tabs',
+    'related_modal_active': True,
+}
+JAZZMIN_UI_TWEAKS = {
+    'navbar': 'navbar-white navbar-light',
+    'sidebar': 'sidebar-dark-primary',
+    'brand_colour': False,
+    'accent': 'accent-primary',
+    'button_classes': {'primary': 'btn-primary', 'danger': 'btn-danger'},
 }
 IMPORT_EXPORT_SKIP_ADMIN_LOG = True
 
@@ -251,6 +296,19 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 EMAIL_USE_TLS = env_bool('EMAIL_USE_TLS')
 EMAIL_USE_SSL = env_bool('EMAIL_USE_SSL')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'webmaster@localhost')
+
+
+# Shop
+
+# Public URL of the website (frontend) and of this backend, used in email links.
+SITE_URL = os.environ.get('SITE_URL', 'http://localhost:5173').rstrip('/')
+BACKEND_URL = os.environ.get('BACKEND_URL', 'http://127.0.0.1:8000').rstrip('/')
+# Absolute URL of the PNG logo shown at the top of every email.
+EMAIL_LOGO_URL = os.environ.get('EMAIL_LOGO_URL', f'{BACKEND_URL}{STATIC_URL}shop/email-logo.png')
+# Who gets "new order / quote / message" alerts (comma-separated).
+SALES_NOTIFICATION_EMAILS = env_list('SALES_NOTIFICATION_EMAILS')
+# Where customer replies to shop emails should go (comma-separated). Empty = the From address.
+SHOP_REPLY_TO = env_list('SHOP_REPLY_TO')
 
 
 # Celery

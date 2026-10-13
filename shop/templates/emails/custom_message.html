@@ -1,0 +1,11 @@
+{% extends "emails/base.html" %}
+{% comment %}
+  Free-form message written in the admin ("Send email" action on customers / subscribers).
+  Context: name (may be empty), body, site_url, logo_url.
+{% endcomment %}
+{% block preheader %}{{ body|truncatechars:90 }}{% endblock %}
+{% block content %}
+<p style="margin:0 0 16px;font-size:15px;line-height:1.6;">Hello{% if name %} {{ name }}{% endif %},</p>
+<div style="font-size:15px;line-height:1.6;">{{ body|linebreaks }}</div>
+<p style="margin:24px 0 0;font-size:15px;line-height:1.6;">Kind regards,<br><strong>Zakayo Industries</strong></p>
+{% endblock %}

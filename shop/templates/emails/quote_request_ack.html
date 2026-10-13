@@ -1,0 +1,17 @@
+{% extends "emails/base.html" %}
+{% comment %}
+  Sent to the requester after POST /api/quote-requests/.
+  Context: quote (shop.models.QuoteRequest), site_url, logo_url.
+{% endcomment %}
+{% block title %}Quote request received{% endblock %}
+{% block preheader %}We’ll send a pro-forma quote for {{ quote.product_name }} within one business day.{% endblock %}
+{% block content %}
+<p style="margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#C9081D;">Quote request</p>
+<h1 style="margin:0 0 16px;font-size:26px;color:#043A80;">Thanks, {{ quote.full_name }}</h1>
+<p style="margin:0 0 20px;font-size:15px;line-height:1.6;">
+  We’ve received your request for <strong>{{ quote.quantity }} × {{ quote.product_name }}</strong> ({{ quote.product.unit|default:"units" }}, {{ quote.sku }})
+  for {{ quote.organization }}, {{ quote.get_country_display }}. Our sales team will email a pro-forma quote within one business day.
+</p>
+{% if quote.message %}<p style="margin:0 0 20px;padding:14px;background:#EEF2F8;border-radius:8px;font-size:14px;">{{ quote.message }}</p>{% endif %}
+<p style="margin:0;"><a href="{{ site_url }}/shop" style="display:inline-block;background:#043A80;color:#FFFFFF;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:8px;">Browse the catalogue</a></p>
+{% endblock %}

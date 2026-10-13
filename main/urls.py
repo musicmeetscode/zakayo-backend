@@ -23,10 +23,11 @@ urlpatterns = [
     path('swagger.json', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    path('admin/', admin.site.urls),
+    path(settings.ADMIN_URL, admin.site.urls),
     path('user/', include('accounts.urls')),
     path('social-auth/', include('social_auth.urls')),
     path('api/', include('api.urls')),
+    path('api/', include('shop.urls')),
     path('health/', health.HealthCheckView.as_view(), name='health'),
     path('ready/', health.ReadyCheckView.as_view(), name='ready'),
 ]

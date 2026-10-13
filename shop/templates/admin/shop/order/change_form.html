@@ -1,0 +1,39 @@
+{% extends "admin/change_form.html" %}
+{% comment %}
+  Order page side panel: status buttons + delivery note.
+  Buttons submit the page's own form (formaction) to the set-status view, so on-page edits are saved too.
+{% endcomment %}
+
+{% block extra_actions %}
+{{ block.super }}
+{% if original %}
+<div class="w-100 mt-3 pt-3 border-top">
+  <p class="text-muted text-uppercase small font-weight-bold mb-2">Order status</p>
+  <p class="mb-2">Currently: <strong>{{ original.get_status_display }}</strong></p>
+
+  {% for url, label, css in status_buttons %}
+    <button type="submit" formaction="{{ url }}" formmethod="post" class="btn btn-sm w-100 mb-2 {{ css }}"
+      {% if 'cancel' in label|lower %}onclick="return confirm('Cancel order {{ original.reference }} and email the customer?')"{% endif %}>
+      {{ label }}
+    </button>
+  {% endfor %}
+
+  {% if original.status == 'dispatched' %}
+    <div class="alert alert-info small mb-2 p-2">
+      Awaiting the customer’s delivery confirmation (QR code on the delivery note).
+    </div>
+  {% elif original.status == 'delivered' %}
+    <div class="alert alert-success small mb-2 p-2">
+      Delivered {{ original.delivered_at|date:"j M Y, H:i" }}{% if original.received_by %} — received by {{ original.received_by }}{% endif %}.
+    </div>
+  {% endif %}
+  {% if status_buttons %}
+    <p class="text-muted small mb-2">Buttons also save any changes on this page and email the customer (include an optional message in “Message for the customer”).</p>
+  {% endif %}
+
+  <a href="{{ delivery_note_url }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary w-100">
+    <i class="fas fa-qrcode"></i> Print delivery note
+  </a>
+</div>
+{% endif %}
+{% endblock %}

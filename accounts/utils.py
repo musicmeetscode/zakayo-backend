@@ -42,16 +42,39 @@ def _flatten_errors(data, prefix=''):
     return errors
 
 
+def _field_errors(data, prefix=''):
+    """Map DRF validation errors to {"dotted.field.path": ["message", ...]} so clients can mark form fields."""
+    fields = {}
+    if isinstance(data, dict):
+        for key, value in data.items():
+            path = prefix if key in ('detail', 'non_field_errors') else (f"{prefix}.{key}" if prefix else key)
+            for field, messages in _field_errors(value, path).items():
+                fields.setdefault(field, []).extend(messages)
+    elif isinstance(data, list):
+        for index, item in enumerate(data):
+            path = f"{prefix}.{index}" if isinstance(item, (dict, list)) and prefix else prefix
+            for field, messages in _field_errors(item, path).items():
+                fields.setdefault(field, []).extend(messages)
+    elif prefix:
+        fields[prefix] = [str(data)]
+    return fields
+
+
 def custom_exception_handler(exc, context):
     """
     Return every error as {"message": str, "errors": [str, ...]} with the right status code.
+    Validation errors also carry "field_errors": {"field.path": [str, ...]}.
     `services.renderers.Renderer` wraps this into the standard response envelope.
     """
     response = exception_handler(exc, context)
 
     if response is not None:
         errors = _flatten_errors(response.data)
-        response.data = {'message': errors[0] if errors else '', 'errors': errors}
+        body = {'message': errors[0] if errors else '', 'errors': errors}
+        field_errors = _field_errors(response.data)
+        if field_errors:
+            body['field_errors'] = field_errors
+        response.data = body
         return response
 
     if isinstance(exc, IntegrityError):

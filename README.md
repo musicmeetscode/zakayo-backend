@@ -114,3 +114,56 @@ Authorization: Bearer <access_token>
 Put your models and views in the `api` app (or a new app) and register routes in `api/urls.py`; they're served under `/api/`.
 For soft delete, UUIDs and timestamps, models can extend `accounts.models.BaseModel`. Views require
 authentication by default; set `permission_classes = (AllowAny,)` to make one public.
+
+## Zakayo Industries shop (`shop` app)
+
+Backend for the Zakayo Industries website (`../zakayo`): catalogue API, checkout, quote requests,
+contact form, newsletter, transactional emails and the staff admin.
+
+### First run
+
+```bash
+python manage.py migrate
+python manage.py create_super_user     # or: python manage.py createsuperuser
+python manage.py setup_admin_roles     # "Sales" and "Catalogue managers" groups
+python manage.py seed_catalogue        # SAMPLE products — replace with the real register
+```
+
+Admin: `http://127.0.0.1:8000/admin/` (path set by `ADMIN_URL`; it is not linked from the website).
+To give a colleague access: Users → add user → tick **Staff status** → add them to a group.
+
+### Public API (no auth, rate-limited by `PUBLIC_FORM_THROTTLE_RATE`)
+
+| Method | Path | |
+| --- | --- | --- |
+| GET | `/api/products/?page_size=500` | Published products |
+| GET | `/api/products/{slug}/` | One product |
+| GET | `/api/categories/` | Categories |
+| POST | `/api/orders/` | Checkout. Prices are re-read from the database; emails customer + `SALES_NOTIFICATION_EMAILS`. Returns `tracking_token` |
+| GET | `/api/orders/{reference}/?token=…` | Customer tracking view (token required; wrong token = 404). Throttled by `TRACKING_THROTTLE_RATE` |
+| POST | `/api/orders/{reference}/confirm-delivery/` | Body `{token, received_by, feedback}`. Only for dispatched orders; sets Delivered and emails customer + sales |
+| POST | `/api/customers/lookup/` | Body `{phone}`. Returning customer at checkout: emails a 6-digit code to the address on file; returns only `{found, masked_email}`. Throttled by `CUSTOMER_LOOKUP_THROTTLE_RATE` |
+| POST | `/api/customers/verify/` | Body `{phone, code}`. Code is single-use, 10-minute expiry, 5 attempts. Returns the saved details for pre-fill |
+| POST | `/api/quote-requests/` | Quote request; emails customer + sales |
+| POST | `/api/contact/` | Contact form; emails customer + sales |
+| POST | `/api/newsletter/` | Subscribe (idempotent) |
+
+Validation errors include `field_errors: {"customer.email": [...]}` alongside the flat `errors` list.
+
+### What staff can do in the admin
+
+- **Products & categories** — add/edit, upload images, publish/hide, stock flags, CSV/XLSX import & export (matched on SKU).
+- **Orders** — review items, set delivery fee and payment instructions, then use the status buttons in the order
+  page's side panel (Confirm → Processing → Dispatched, or Cancel). Each button saves the page and emails the customer,
+  with an optional message. Bulk actions do the same from the list. Export to CSV/XLSX.
+- **Delivery notes** — "Print delivery note" (order page or the 🖨 link in the list) gives an A4 note with a QR code.
+  The customer scans it on arrival and taps "I've received my order" on the website: that is the only way an order
+  becomes **Delivered** (staff can't set it), and it emails the customer and sales.
+- **Customers** — created automatically from orders/quotes (matched by email), with order history and value;
+  "Send email to selected customers" composes a branded email.
+- **Quote requests** — fill in the quoted price, then "Send quote to customer".
+- **Contact messages** — write a reply, then "Send reply".
+- **Newsletter** — export subscribers or email them.
+- **Email log** — every email sent, with failures.
+
+Emails live in `shop/templates/emails/`. Locally they print to the console; set the SMTP variables in `.env` to send.

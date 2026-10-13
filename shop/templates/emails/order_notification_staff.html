@@ -1,0 +1,25 @@
+{% extends "emails/base.html" %}
+{% load humanize %}
+{% comment %}
+  Sent to the SALES TEAM for every new order. Same context as order_confirmation.html plus admin_url.
+{% endcomment %}
+{% block title %}New order {{ order.reference }}{% endblock %}
+{% block preheader %}{{ order.full_name }} · UGX {{ order.subtotal_ugx|floatformat:0|intcomma }} · {{ order.get_country_display }}{% endblock %}
+{% block content %}
+<p style="margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#C9081D;">New web order</p>
+<h1 style="margin:0 0 20px;font-size:24px;color:#043A80;">{{ order.reference }} — UGX {{ order.subtotal_ugx|floatformat:0|intcomma }}</h1>
+<table role="presentation" width="100%" cellpadding="6" cellspacing="0" style="font-size:14px;border:1px solid #E4E1DA;border-radius:10px;border-collapse:separate;">
+  <tr><td width="38%" style="color:#5C5C5C;">Customer</td><td><strong>{{ order.full_name }}</strong> ({{ order.get_customer_type_display }})</td></tr>
+  {% if order.organization %}<tr><td style="color:#5C5C5C;">Organisation</td><td>{{ order.organization }}</td></tr>{% endif %}
+  <tr><td style="color:#5C5C5C;">Phone</td><td><a href="tel:{{ order.phone }}">{{ order.phone }}</a></td></tr>
+  <tr><td style="color:#5C5C5C;">Email</td><td><a href="mailto:{{ order.email }}">{{ order.email }}</a></td></tr>
+  <tr><td style="color:#5C5C5C;">Delivery</td><td>{{ order.address }}, {{ order.city }}, {{ order.region }}, {{ order.get_country_display }}</td></tr>
+  <tr><td style="color:#5C5C5C;">Payment preference</td><td>{{ order.get_payment_method_display }}</td></tr>
+  {% if order.notes %}<tr><td style="color:#5C5C5C;">Notes</td><td>{{ order.notes }}</td></tr>{% endif %}
+</table>
+<h2 style="margin:24px 0 8px;font-size:16px;color:#043A80;">Items</h2>
+<ul style="margin:0;padding-left:18px;font-size:14px;line-height:1.7;">
+  {% for item in items %}<li>{{ item.quantity }} × {{ item.product_name }} <span style="color:#5C5C5C;">({{ item.sku }}, {{ item.unit }})</span> — UGX {{ item.line_total_ugx|floatformat:0|intcomma }}</li>{% endfor %}
+</ul>
+<p style="margin:28px 0 0;"><a href="{{ admin_url }}" style="display:inline-block;background:#C9081D;color:#FFFFFF;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:8px;">Open in admin</a></p>
+{% endblock %}

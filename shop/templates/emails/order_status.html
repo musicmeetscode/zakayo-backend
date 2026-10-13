@@ -1,0 +1,45 @@
+{% extends "emails/base.html" %}
+{% load humanize %}
+{% comment %}
+  Sent to the CUSTOMER when staff change an order's status in the admin.
+  Context: order, items, tracking_url, headline, intro, note (optional staff message), site_url, logo_url.
+{% endcomment %}
+{% block title %}{{ headline }} — {{ order.reference }}{% endblock %}
+{% block preheader %}{{ intro }}{% endblock %}
+{% block content %}
+<p style="margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#C9081D;">Order {{ order.reference }}</p>
+<h1 style="margin:0 0 16px;font-size:26px;line-height:1.2;color:#043A80;">{{ headline }}</h1>
+<p style="margin:0 0 20px;font-size:15px;line-height:1.6;">Hello {{ order.full_name }}, {{ intro|lower|slice:":1" }}{{ intro|slice:"1:" }}</p>
+{% if note %}<p style="margin:0 0 20px;padding:14px;background:#EEF2F8;border-radius:8px;font-size:14px;line-height:1.6;">{{ note|linebreaksbr }}</p>{% endif %}
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #E4E1DA;border-radius:10px;border-collapse:separate;font-size:14px;">
+  {% for item in items %}
+  <tr>
+    <td style="padding:10px 14px;{% if not forloop.first %}border-top:1px solid #E4E1DA;{% endif %}">{{ item.quantity }} × {{ item.product_name }} <span style="color:#5C5C5C;font-size:12px;">({{ item.unit }})</span></td>
+    <td align="right" style="padding:10px 14px;{% if not forloop.first %}border-top:1px solid #E4E1DA;{% endif %}white-space:nowrap;">UGX {{ item.line_total_ugx|intcomma }}</td>
+  </tr>
+  {% endfor %}
+  <tr><td style="padding:10px 14px;border-top:1px solid #E4E1DA;color:#5C5C5C;">Subtotal</td><td align="right" style="padding:10px 14px;border-top:1px solid #E4E1DA;">UGX {{ order.subtotal_ugx|intcomma }}</td></tr>
+  {% if order.delivery_fee_ugx %}<tr><td style="padding:10px 14px;border-top:1px solid #E4E1DA;color:#5C5C5C;">Delivery</td><td align="right" style="padding:10px 14px;border-top:1px solid #E4E1DA;">UGX {{ order.delivery_fee_ugx|intcomma }}</td></tr>{% endif %}
+  <tr><td style="padding:12px 14px;border-top:1px solid #E4E1DA;font-weight:700;">Total</td><td align="right" style="padding:12px 14px;border-top:1px solid #E4E1DA;font-weight:700;font-size:16px;color:#043A80;white-space:nowrap;">UGX {{ order.total_ugx|intcomma }}</td></tr>
+</table>
+
+{% if order.status == 'confirmed' and order.payment_instructions %}
+<h2 style="margin:24px 0 8px;font-size:16px;color:#043A80;">How to pay ({{ order.get_payment_method_display }})</h2>
+<p style="margin:0;font-size:14px;line-height:1.6;">{{ order.payment_instructions|linebreaksbr }}</p>
+{% endif %}
+
+{% if order.status == 'dispatched' %}
+<p style="margin:24px 0 12px;font-size:14px;line-height:1.6;">
+  <strong>When your order arrives,</strong> scan the QR code on the delivery note — or use the button below — to confirm you’ve received it.
+</p>
+<p style="margin:0;"><a href="{{ tracking_url }}" style="display:inline-block;background:#043A80;color:#FFFFFF;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:8px;">Confirm delivery</a></p>
+{% elif order.status != 'cancelled' and order.status != 'delivered' %}
+<p style="margin:24px 0 0;"><a href="{{ tracking_url }}" style="display:inline-block;background:#043A80;color:#FFFFFF;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:8px;">Track your order</a></p>
+{% endif %}
+
+<p style="margin:24px 0 0;font-size:14px;line-height:1.6;">
+  {% if order.status == 'delivered' %}Delivered to{% else %}Delivering to{% endif %}: {{ order.address }}, {{ order.city }}, {{ order.region }}, {{ order.get_country_display }}.<br>
+  Questions? Reply to this email or call <a href="tel:+256775720950" style="color:#043A80;">+256 775 720950</a>.
+</p>
+{% endblock %}

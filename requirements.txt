@@ -17,3 +17,4 @@ psycopg[binary]
 google-auth
 requests
 uvicorn
+segno

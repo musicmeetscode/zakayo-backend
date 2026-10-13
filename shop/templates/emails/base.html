@@ -1,0 +1,39 @@
+{% comment %}
+  Zakayo Industries — base transactional email layout.
+  Table-based with inline styles for broad email-client support (Gmail, Outlook, mobile).
+  Brand: navy #043A80, red #C9081D, ink #1C1C1C, paper #FAF9F6.
+  Required context: site_url (e.g. https://zakayoindustries.com), logo_url (absolute URL to a PNG logo).
+{% endcomment %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>{% block title %}Zakayo Industries{% endblock %}</title>
+</head>
+<body style="margin:0;padding:0;background:#FAF9F6;font-family:'Avenir Next',Avenir,'Nunito Sans',Helvetica,Arial,sans-serif;color:#1C1C1C;">
+  <span style="display:none;max-height:0;overflow:hidden;opacity:0;">{% block preheader %}{% endblock %}</span>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FAF9F6;">
+    <tr><td align="center" style="padding:24px 12px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#FFFFFF;border-radius:14px;overflow:hidden;border:1px solid #E4E1DA;">
+        <tr>
+          <td style="padding:22px 32px;border-bottom:1px solid #E4E1DA;">
+            <a href="{{ site_url }}"><img src="{{ logo_url }}" alt="Zakayo Industries" height="40" style="display:block;height:40px;width:auto;border:0;"></a>
+          </td>
+        </tr>
+        <tr><td style="height:4px;background:#043A80;background-image:linear-gradient(90deg,#C9081D,#64214D,#043A80);font-size:0;line-height:0;">&nbsp;</td></tr>
+        <tr><td style="padding:32px;">{% block content %}{% endblock %}</td></tr>
+        <tr>
+          <td style="padding:24px 32px;background:#1C1C1C;color:#BDBDBD;font-size:12px;line-height:1.6;">
+            <strong style="color:#FFFFFF;">Zakayo Industries SMC Ltd</strong><br>
+            Plot 264, Block 424, Ntenjeru, Mukono District, Uganda · P.O. Box 150323, Mukono<br>
+            <a href="tel:+256775720950" style="color:#FFFFFF;text-decoration:none;">+256 775 720950</a> ·
+            <a href="mailto:snaggayi@human.ug" style="color:#FFFFFF;text-decoration:none;">snaggayi@human.ug</a><br>
+            ISO 13485:2016 · ISO 9001:2015 · NDA licensed manufacturer
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

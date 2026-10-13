@@ -1,0 +1,13 @@
+{% load humanize %}Thank you, {{ order.full_name }}.
+
+We've received your order {{ order.reference }}. No payment has been taken yet — our sales team will contact you to confirm stock, delivery cost and payment ({{ order.get_payment_method_display }}).
+
+{% for item in items %}- {{ item.product_name }} ({{ item.unit }}, {{ item.sku }}) x {{ item.quantity }} = UGX {{ item.line_total_ugx|floatformat:0|intcomma }}
+{% endfor %}
+Subtotal: UGX {{ order.subtotal_ugx|floatformat:0|intcomma }} (delivery quoted on confirmation)
+
+Track your order: {{ tracking_url }}
+
+Deliver to: {{ order.address }}, {{ order.city }}, {{ order.region }}, {{ order.get_country_display }}
+
+Zakayo Industries SMC Ltd · +256 775 720950 · snaggayi@human.ug

@@ -1,0 +1,15 @@
+{% extends "emails/base.html" %}
+{% comment %}
+  Generic internal alert (new quote request, new contact message).
+  Context: heading, rows (list of (label, value) pairs), admin_url.
+{% endcomment %}
+{% block content %}
+<p style="margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#C9081D;">Website notification</p>
+<h1 style="margin:0 0 20px;font-size:22px;color:#043A80;">{{ heading }}</h1>
+<table role="presentation" width="100%" cellpadding="8" cellspacing="0" style="font-size:14px;border:1px solid #E4E1DA;border-radius:10px;border-collapse:separate;">
+  {% for label, value in rows %}
+  <tr><td width="30%" valign="top" style="color:#5C5C5C;">{{ label }}</td><td>{{ value|linebreaksbr }}</td></tr>
+  {% endfor %}
+</table>
+<p style="margin:28px 0 0;"><a href="{{ admin_url }}" style="display:inline-block;background:#C9081D;color:#FFFFFF;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:8px;">Open in admin</a></p>
+{% endblock %}

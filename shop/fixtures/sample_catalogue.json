@@ -1,0 +1,549 @@
+{
+  "categories": [
+    {
+      "slug": "rapid-tests",
+      "label": "Rapid Tests",
+      "description": "Point-of-care and self-test IVD kits for infectious disease screening.",
+      "sort_order": 0
+    },
+    {
+      "slug": "consumables",
+      "label": "Consumables",
+      "description": "Specimen collection, handling and everyday laboratory consumables.",
+      "sort_order": 1
+    },
+    {
+      "slug": "equipment",
+      "label": "Equipment",
+      "description": "Benchtop accessories and small equipment for testing sites and labs.",
+      "sort_order": 2
+    }
+  ],
+  "products": [
+    {
+      "sku": "ZI-RT-HIVST-01",
+      "name": "HIV-1/2 Oral Fluid Self-Test",
+      "slug": "hiv-1-2-oral-fluid-self-test",
+      "category": "rapid-tests",
+      "short_description": "Single-use oral fluid self-test with step-by-step pictorial instructions.",
+      "description": "A single-use, oral-fluid HIV-1/2 antibody self-test designed for private, easy use at home or through community distribution. Results are read visually in 20–40 minutes with no blood draw or instrument required.",
+      "price_ugx": 18000,
+      "unit": "Single test",
+      "min_order_qty": 1,
+      "regulatory": [
+        "NDA",
+        "ISO 13485"
+      ],
+      "in_stock": true,
+      "quote_only": false,
+      "featured": true,
+      "visual": "self-test",
+      "specs": [
+        {
+          "label": "Specimen",
+          "value": "Oral fluid"
+        },
+        {
+          "label": "Read time",
+          "value": "20–40 minutes"
+        },
+        {
+          "label": "Storage",
+          "value": "2–30 °C"
+        },
+        {
+          "label": "Use",
+          "value": "Self-testing"
+        }
+      ],
+      "sort_order": 0
+    },
+    {
+      "sku": "ZI-RT-HIVP-25",
+      "name": "HIV-1/2 Rapid Antibody Test (Professional)",
+      "slug": "hiv-1-2-rapid-antibody-test-professional",
+      "category": "rapid-tests",
+      "short_description": "Professional-use rapid test for oral fluid, finger-stick or venous whole blood, serum and plasma.",
+      "description": "A professional-use lateral flow test for the qualitative detection of antibodies to HIV-1 and HIV-2. Suitable for testing sites, clinics and outreach programmes.",
+      "price_ugx": 275000,
+      "unit": "Kit of 25 tests",
+      "min_order_qty": 1,
+      "regulatory": [
+        "NDA",
+        "ISO 13485"
+      ],
+      "in_stock": true,
+      "quote_only": false,
+      "featured": true,
+      "visual": "cassette",
+      "specs": [
+        {
+          "label": "Specimen",
+          "value": "Oral fluid, whole blood, serum, plasma"
+        },
+        {
+          "label": "Read time",
+          "value": "20–40 minutes"
+        },
+        {
+          "label": "Pack",
+          "value": "25 devices + controls"
+        },
+        {
+          "label": "Storage",
+          "value": "2–30 °C"
+        }
+      ],
+      "sort_order": 1
+    },
+    {
+      "sku": "ZI-RT-HCV-25",
+      "name": "HCV Antibody Rapid Test",
+      "slug": "hcv-antibody-rapid-test",
+      "category": "rapid-tests",
+      "short_description": "Rapid screening for antibodies to hepatitis C virus.",
+      "description": "Qualitative rapid test for antibodies to hepatitis C virus in finger-stick or venous whole blood, serum and plasma. Designed for decentralised screening.",
+      "price_ugx": 310000,
+      "unit": "Kit of 25 tests",
+      "min_order_qty": 1,
+      "regulatory": [
+        "NDA",
+        "ISO 13485"
+      ],
+      "in_stock": true,
+      "quote_only": false,
+      "featured": true,
+      "visual": "cassette",
+      "specs": [
+        {
+          "label": "Specimen",
+          "value": "Whole blood, serum, plasma"
+        },
+        {
+          "label": "Read time",
+          "value": "20–40 minutes"
+        },
+        {
+          "label": "Pack",
+          "value": "25 devices"
+        }
+      ],
+      "sort_order": 2
+    },
+    {
+      "sku": "ZI-RT-MAL-25",
+      "name": "Malaria Pf/Pan Antigen Rapid Test",
+      "slug": "malaria-pf-pan-antigen-rapid-test",
+      "category": "rapid-tests",
+      "short_description": "Differentiates P. falciparum from other Plasmodium species.",
+      "description": "Rapid immunochromatographic test detecting HRP-II (P. falciparum) and pLDH (pan-species) antigens in whole blood. Ideal for health centres and community case management.",
+      "price_ugx": 95000,
+      "unit": "Kit of 25 tests",
+      "min_order_qty": 1,
+      "regulatory": [
+        "NDA"
+      ],
+      "in_stock": true,
+      "quote_only": false,
+      "featured": false,
+      "visual": "cassette",
+      "specs": [
+        {
+          "label": "Specimen",
+          "value": "Whole blood (5 µL)"
+        },
+        {
+          "label": "Read time",
+          "value": "15–20 minutes"
+        },
+        {
+          "label": "Targets",
+          "value": "HRP-II / pLDH"
+        }
+      ],
+      "sort_order": 3
+    },
+    {
+      "sku": "ZI-RT-SYP-30",
+      "name": "Syphilis Antibody Rapid Test",
+      "slug": "syphilis-antibody-rapid-test",
+      "category": "rapid-tests",
+      "short_description": "Treponemal antibody screening for antenatal and STI clinics.",
+      "description": "Rapid qualitative detection of antibodies to Treponema pallidum. Supports same-day screening in antenatal care and STI services.",
+      "price_ugx": 120000,
+      "unit": "Kit of 30 tests",
+      "min_order_qty": 1,
+      "regulatory": [
+        "NDA"
+      ],
+      "in_stock": true,
+      "quote_only": false,
+      "featured": false,
+      "visual": "cassette",
+      "specs": [
+        {
+          "label": "Specimen",
+          "value": "Whole blood, serum, plasma"
+        },
+        {
+          "label": "Read time",
+          "value": "15 minutes"
+        }
+      ],
+      "sort_order": 4
+    },
+    {
+      "sku": "ZI-RT-HBS-50",
+      "name": "Hepatitis B Surface Antigen Rapid Test",
+      "slug": "hepatitis-b-surface-antigen-rapid-test",
+      "category": "rapid-tests",
+      "short_description": "HBsAg screening strip test for clinics and blood screening points.",
+      "description": "Strip-format rapid test for qualitative detection of hepatitis B surface antigen in serum or plasma.",
+      "price_ugx": 85000,
+      "unit": "Pack of 50 strips",
+      "min_order_qty": 1,
+      "regulatory": [
+        "NDA"
+      ],
+      "in_stock": true,
+      "quote_only": false,
+      "featured": false,
+      "visual": "strip",
+      "specs": [
+        {
+          "label": "Specimen",
+          "value": "Serum, plasma"
+        },
+        {
+          "label": "Read time",
+          "value": "15 minutes"
+        }
+      ],
+      "sort_order": 5
+    },
+    {
+      "sku": "ZI-RT-HCG-100",
+      "name": "hCG Pregnancy Test Strip",
+      "slug": "hcg-pregnancy-test-strip",
+      "category": "rapid-tests",
+      "short_description": "High-sensitivity urine pregnancy strip, individually foil-sealed.",
+      "description": "One-step urine hCG strip test, individually foil-pouched for pharmacy and clinic use.",
+      "price_ugx": 60000,
+      "unit": "Pack of 100 strips",
+      "min_order_qty": 1,
+      "regulatory": [
+        "NDA"
+      ],
+      "in_stock": true,
+      "quote_only": false,
+      "featured": false,
+      "visual": "strip",
+      "specs": [
+        {
+          "label": "Specimen",
+          "value": "Urine"
+        },
+        {
+          "label": "Read time",
+          "value": "3–5 minutes"
+        }
+      ],
+      "sort_order": 6
+    },
+    {
+      "sku": "ZI-CN-EDTA-100",
+      "name": "EDTA Blood Collection Tubes (4 mL)",
+      "slug": "edta-blood-collection-tubes-4-ml",
+      "category": "consumables",
+      "short_description": "K2 EDTA vacuum tubes for haematology, lavender cap.",
+      "description": "Sterile K2 EDTA vacuum blood collection tubes for whole blood haematology testing.",
+      "price_ugx": 70000,
+      "unit": "Rack of 100",
+      "min_order_qty": 1,
+      "regulatory": [
+        "ISO 9001"
+      ],
+      "in_stock": true,
+      "quote_only": false,
+      "featured": false,
+      "visual": "tube",
+      "specs": [
+        {
+          "label": "Volume",
+          "value": "4 mL"
+        },
+        {
+          "label": "Additive",
+          "value": "K2 EDTA"
+        },
+        {
+          "label": "Sterility",
+          "value": "Sterile, single use"
+        }
+      ],
+      "sort_order": 7
+    },
+    {
+      "sku": "ZI-CN-SWAB-100",
+      "name": "Sterile Specimen Collection Swabs",
+      "slug": "sterile-specimen-collection-swabs",
+      "category": "consumables",
+      "short_description": "Individually wrapped flocked swabs for specimen collection.",
+      "description": "Individually packed sterile flocked swabs with breakpoint for oral, nasal and pharyngeal sampling.",
+      "price_ugx": 45000,
+      "unit": "Box of 100",
+      "min_order_qty": 1,
+      "regulatory": [
+        "ISO 9001"
+      ],
+      "in_stock": true,
+      "quote_only": false,
+      "featured": false,
+      "visual": "swab",
+      "specs": [
+        {
+          "label": "Tip",
+          "value": "Nylon flocked"
+        },
+        {
+          "label": "Packing",
+          "value": "Individually wrapped"
+        }
+      ],
+      "sort_order": 8
+    },
+    {
+      "sku": "ZI-CN-LAN-200",
+      "name": "Safety Lancets (21G)",
+      "slug": "safety-lancets-21g",
+      "category": "consumables",
+      "short_description": "Single-use retractable safety lancets for finger-stick sampling.",
+      "description": "Contact-activated, auto-retracting safety lancets for capillary blood sampling with RDTs.",
+      "price_ugx": 55000,
+      "unit": "Box of 200",
+      "min_order_qty": 1,
+      "regulatory": [
+        "ISO 9001"
+      ],
+      "in_stock": true,
+      "quote_only": false,
+      "featured": false,
+      "visual": "box",
+      "specs": [
+        {
+          "label": "Gauge",
+          "value": "21G"
+        },
+        {
+          "label": "Mechanism",
+          "value": "Auto-retracting"
+        }
+      ],
+      "sort_order": 9
+    },
+    {
+      "sku": "ZI-CN-TIP-1000",
+      "name": "Pipette Tips 200 µL (Yellow)",
+      "slug": "pipette-tips-200-l-yellow",
+      "category": "consumables",
+      "short_description": "Universal-fit polypropylene pipette tips.",
+      "description": "Universal-fit, graduated 200 µL pipette tips in polypropylene, bulk packed.",
+      "price_ugx": 38000,
+      "unit": "Bag of 1,000",
+      "min_order_qty": 1,
+      "regulatory": [
+        "ISO 9001"
+      ],
+      "in_stock": true,
+      "quote_only": false,
+      "featured": false,
+      "visual": "tips",
+      "specs": [
+        {
+          "label": "Volume",
+          "value": "200 µL"
+        },
+        {
+          "label": "Material",
+          "value": "Polypropylene"
+        }
+      ],
+      "sort_order": 10
+    },
+    {
+      "sku": "ZI-CN-TPIP-500",
+      "name": "Transfer Pipettes (3 mL)",
+      "slug": "transfer-pipettes-3-ml",
+      "category": "consumables",
+      "short_description": "Graduated disposable transfer pipettes for RDT specimen transfer.",
+      "description": "Graduated, non-sterile LDPE transfer pipettes for specimen and buffer handling.",
+      "price_ugx": 40000,
+      "unit": "Pack of 500",
+      "min_order_qty": 1,
+      "regulatory": [
+        "ISO 9001"
+      ],
+      "in_stock": true,
+      "quote_only": false,
+      "featured": false,
+      "visual": "tips",
+      "specs": [
+        {
+          "label": "Volume",
+          "value": "3 mL, graduated"
+        }
+      ],
+      "sort_order": 11
+    },
+    {
+      "sku": "ZI-CN-GLV-100",
+      "name": "Nitrile Examination Gloves",
+      "slug": "nitrile-examination-gloves",
+      "category": "consumables",
+      "short_description": "Powder-free nitrile gloves, sizes S–XL.",
+      "description": "Powder-free, ambidextrous nitrile examination gloves with textured fingertips.",
+      "price_ugx": 32000,
+      "unit": "Box of 100",
+      "min_order_qty": 1,
+      "regulatory": [
+        "ISO 9001"
+      ],
+      "in_stock": true,
+      "quote_only": false,
+      "featured": false,
+      "visual": "box",
+      "specs": [
+        {
+          "label": "Material",
+          "value": "Nitrile, powder-free"
+        },
+        {
+          "label": "Sizes",
+          "value": "S, M, L, XL"
+        }
+      ],
+      "sort_order": 12
+    },
+    {
+      "sku": "ZI-CN-URC-100",
+      "name": "Urine Specimen Containers (60 mL)",
+      "slug": "urine-specimen-containers-60-ml",
+      "category": "consumables",
+      "short_description": "Leak-proof screw-cap specimen containers with label.",
+      "description": "Sterile 60 mL polypropylene specimen containers with leak-proof screw caps and write-on labels.",
+      "price_ugx": 48000,
+      "unit": "Pack of 100",
+      "min_order_qty": 1,
+      "regulatory": [
+        "ISO 9001"
+      ],
+      "in_stock": true,
+      "quote_only": false,
+      "featured": false,
+      "visual": "tube",
+      "specs": [
+        {
+          "label": "Volume",
+          "value": "60 mL"
+        }
+      ],
+      "sort_order": 13
+    },
+    {
+      "sku": "ZI-EQ-TMR-01",
+      "name": "Rapid Test Timer (4-channel)",
+      "slug": "rapid-test-timer-4-channel",
+      "category": "equipment",
+      "short_description": "Four independent countdown channels for batch RDT reading.",
+      "description": "Battery-powered four-channel laboratory timer with audible alarms for running multiple rapid tests in parallel.",
+      "price_ugx": 85000,
+      "unit": "Each",
+      "min_order_qty": 1,
+      "regulatory": [],
+      "in_stock": true,
+      "quote_only": false,
+      "featured": false,
+      "visual": "device",
+      "specs": [
+        {
+          "label": "Channels",
+          "value": "4"
+        }
+      ],
+      "sort_order": 14
+    },
+    {
+      "sku": "ZI-EQ-CFG-01",
+      "name": "Mini Centrifuge (6-place)",
+      "slug": "mini-centrifuge-6-place",
+      "category": "equipment",
+      "short_description": "Compact benchtop centrifuge for serum and plasma separation.",
+      "description": "Compact benchtop centrifuge accepting 1.5/2.0 mL and PCR strip tubes for quick spins at testing sites.",
+      "price_ugx": 1250000,
+      "unit": "Each",
+      "min_order_qty": 1,
+      "regulatory": [
+        "CE-IVD"
+      ],
+      "in_stock": true,
+      "quote_only": false,
+      "featured": false,
+      "visual": "device",
+      "specs": [
+        {
+          "label": "Capacity",
+          "value": "6 × 1.5/2.0 mL"
+        }
+      ],
+      "sort_order": 15
+    },
+    {
+      "sku": "ZI-EQ-CBX-01",
+      "name": "Specimen Transport Cool Box",
+      "slug": "specimen-transport-cool-box",
+      "category": "equipment",
+      "short_description": "Insulated carrier for specimen referral and kit transport.",
+      "description": "Insulated, washable specimen transport box with ice-pack compartments for sample referral networks.",
+      "price_ugx": 210000,
+      "unit": "Each",
+      "min_order_qty": 1,
+      "regulatory": [],
+      "in_stock": true,
+      "quote_only": false,
+      "featured": false,
+      "visual": "box",
+      "specs": [
+        {
+          "label": "Capacity",
+          "value": "12 L"
+        }
+      ],
+      "sort_order": 16
+    },
+    {
+      "sku": "ZI-EQ-PROG-01",
+      "name": "Testing Site Starter Pack",
+      "slug": "testing-site-starter-pack",
+      "category": "equipment",
+      "short_description": "Bundled kits, consumables and accessories for new testing sites.",
+      "description": "A configurable bundle of rapid tests, consumables and accessories for programmes setting up new testing sites. Priced per programme — request a quote.",
+      "price_ugx": 0,
+      "unit": "Per programme",
+      "min_order_qty": 1,
+      "regulatory": [
+        "ISO 13485"
+      ],
+      "in_stock": true,
+      "quote_only": true,
+      "featured": false,
+      "visual": "box",
+      "specs": [
+        {
+          "label": "Configuration",
+          "value": "Built to your programme"
+        }
+      ],
+      "sort_order": 17
+    }
+  ]
+}

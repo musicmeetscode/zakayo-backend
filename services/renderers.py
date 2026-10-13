@@ -5,6 +5,7 @@ class Renderer(renderers.JSONRenderer):
     """
     Wraps every JSON response in one envelope:
         {"success": bool, "status_code": int, "message": str, "data": ..., "errors": [...]}
+    Validation errors additionally include "field_errors": {"field.path": [...]}.
     Error bodies come from accounts.utils.custom_exception_handler.
     """
     charset = 'utf-8'
@@ -28,6 +29,8 @@ class Renderer(renderers.JSONRenderer):
                 'data': None,
                 'errors': errors,
             }
+            if isinstance(data, dict) and data.get('field_errors'):
+                body['field_errors'] = data['field_errors']
         else:
             message = ''
             if isinstance(data, dict) and set(data) == {'message'}:

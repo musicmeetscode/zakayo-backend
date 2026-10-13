@@ -1,0 +1,32 @@
+{% extends "emails/base.html" %}
+{% load humanize %}
+{% comment %}
+  Quotation sent to the CUSTOMER from the admin ("Send quote" action).
+  Context: quote (shop.models.QuoteRequest with quoted_unit_price_ugx set), site_url, logo_url.
+{% endcomment %}
+{% block title %}Your quotation{% endblock %}
+{% block preheader %}{{ quote.quantity }} × {{ quote.product_name }} — UGX {{ quote.quoted_total_ugx|intcomma }}{% endblock %}
+{% block content %}
+<p style="margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#C9081D;">Quotation</p>
+<h1 style="margin:0 0 16px;font-size:26px;line-height:1.2;color:#043A80;">Your quote, {{ quote.full_name }}</h1>
+<p style="margin:0 0 20px;font-size:15px;line-height:1.6;">Thank you for your interest. Here is our quotation for {{ quote.organization }}:</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #E4E1DA;border-radius:10px;border-collapse:separate;font-size:14px;">
+  <tr style="background:#EEF2F8;">
+    <th align="left" style="padding:10px 14px;color:#043A80;">Product</th>
+    <th align="center" style="padding:10px 8px;color:#043A80;">Qty</th>
+    <th align="right" style="padding:10px 14px;color:#043A80;">Unit price</th>
+  </tr>
+  <tr>
+    <td style="padding:12px 14px;border-top:1px solid #E4E1DA;"><strong>{{ quote.product_name }}</strong><br><span style="color:#5C5C5C;font-size:12px;">{{ quote.sku }}{% if quote.product %} · {{ quote.product.unit }}{% endif %}</span></td>
+    <td align="center" style="padding:12px 8px;border-top:1px solid #E4E1DA;">{{ quote.quantity }}</td>
+    <td align="right" style="padding:12px 14px;border-top:1px solid #E4E1DA;white-space:nowrap;">UGX {{ quote.quoted_unit_price_ugx|intcomma }}</td>
+  </tr>
+  <tr>
+    <td colspan="2" align="right" style="padding:14px;border-top:1px solid #E4E1DA;font-weight:700;">Total</td>
+    <td align="right" style="padding:14px;border-top:1px solid #E4E1DA;font-weight:700;font-size:16px;color:#043A80;white-space:nowrap;">UGX {{ quote.quoted_total_ugx|intcomma }}</td>
+  </tr>
+</table>
+{% if quote.quote_valid_until %}<p style="margin:8px 0 0;font-size:12px;color:#5C5C5C;">Valid until {{ quote.quote_valid_until|date:"j F Y" }}. Delivery and taxes as noted below.</p>{% endif %}
+{% if quote.quote_message %}<p style="margin:20px 0 0;font-size:14px;line-height:1.6;">{{ quote.quote_message|linebreaksbr }}</p>{% endif %}
+<p style="margin:24px 0 0;font-size:14px;line-height:1.6;">To accept, simply reply to this email or call <a href="tel:+256775720950" style="color:#043A80;">+256 775 720950</a>.</p>
+{% endblock %}

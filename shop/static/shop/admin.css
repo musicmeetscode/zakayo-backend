@@ -1,0 +1,26 @@
+/* Zakayo Industries admin branding — navy #043A80, red #C9081D, paper #FAF9F6. */
+:root {
+  --zi-navy: #043a80;
+  --zi-red: #c9081d;
+}
+.main-sidebar,
+.main-sidebar .brand-link {
+  background: linear-gradient(180deg, #032c62 0%, #043a80 100%) !important;
+}
+.sidebar .nav-link.active,
+.nav-pills .nav-link.active {
+  background-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: inset 3px 0 0 var(--zi-red);
+}
+.btn-primary,
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: var(--zi-navy) !important;
+  border-color: var(--zi-navy) !important;
+}
+.btn-danger { background-color: var(--zi-red) !important; border-color: var(--zi-red) !important; }
+a { color: var(--zi-navy); }
+.content-wrapper { background: #faf9f6; }
+.brand-link .brand-image { max-height: 30px; margin-top: 2px; }
+.login-page { background: linear-gradient(45deg, #c9081d 0%, #64214d 45%, #043a80 100%); }
+.login-logo img { max-height: 70px; }

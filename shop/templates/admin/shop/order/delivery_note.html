@@ -1,0 +1,118 @@
+{% load static humanize %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Delivery note {{ order.reference }}</title>
+  <style>
+    @page { size: A4; margin: 14mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Avenir Next", Avenir, "Nunito Sans", Helvetica, Arial, sans-serif; color: #1c1c1c; background: #f1efea; }
+    .sheet { width: 210mm; min-height: 297mm; margin: 16px auto; background: #fff; padding: 14mm; box-shadow: 0 10px 40px -20px rgba(4,58,128,.35); }
+    .toolbar { text-align: center; margin: 16px; }
+    .toolbar button { background: #043a80; color: #fff; border: 0; padding: 10px 22px; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; }
+    header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #043a80; padding-bottom: 12px; }
+    header img { height: 46px; }
+    .doc-title { text-align: right; }
+    .doc-title h1 { margin: 0; font-size: 26px; color: #043a80; letter-spacing: .02em; }
+    .doc-title p { margin: 4px 0 0; font-size: 13px; color: #5c5c5c; }
+    .ref { font-family: ui-monospace, Consolas, monospace; font-size: 16px; font-weight: 700; color: #1c1c1c; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+    .box h2, .qr h2 { margin: 0 0 6px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #c9081d; }
+    .box p { margin: 0; font-size: 14px; line-height: 1.55; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; background: #eef2f8; color: #043a80; padding: 8px 10px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+    td { padding: 9px 10px; border-bottom: 1px solid #e4e1da; vertical-align: top; }
+    td.qty { width: 70px; text-align: center; font-weight: 700; }
+    td.check { width: 60px; text-align: center; }
+    .tick { display: inline-block; width: 16px; height: 16px; border: 1.5px solid #9ca3af; border-radius: 3px; }
+    .qr { display: flex; gap: 18px; align-items: center; margin-top: 22px; padding: 16px; border: 2px dashed #043a80; border-radius: 12px; break-inside: avoid; }
+    .qr svg { width: 150px; height: 150px; flex-shrink: 0; }
+    .qr p { margin: 0 0 6px; font-size: 14px; line-height: 1.5; }
+    .qr .url { font-family: ui-monospace, Consolas, monospace; font-size: 10px; color: #5c5c5c; word-break: break-all; }
+    .sign { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 26px; font-size: 12px; color: #5c5c5c; break-inside: avoid; }
+    .sign div { border-top: 1px solid #1c1c1c; padding-top: 6px; }
+    footer { margin-top: 26px; padding-top: 10px; border-top: 1px solid #e4e1da; font-size: 11px; color: #5c5c5c; line-height: 1.5; }
+    @media print {
+      body { background: #fff; }
+      .toolbar { display: none; }
+      .sheet { margin: 0; width: auto; min-height: 0; padding: 0; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar"><button type="button" onclick="window.print()">Print delivery note</button></div>
+
+  <main class="sheet">
+    <header>
+      <img src="{% static 'shop/email-logo.png' %}" alt="Zakayo Industries">
+      <div class="doc-title">
+        <h1>DELIVERY NOTE</h1>
+        <p>Order <span class="ref">{{ order.reference }}</span></p>
+        <p>Ordered {{ order.created_at|date:"j M Y" }} · Printed {{ printed_at|date:"j M Y, H:i" }}</p>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="box">
+        <h2>Deliver to</h2>
+        <p>
+          <strong>{{ order.full_name }}</strong><br>
+          {% if order.organization %}{{ order.organization }}<br>{% endif %}
+          {{ order.address }}<br>
+          {{ order.city }}, {{ order.region }}<br>
+          {{ order.get_country_display }}<br>
+          Tel: {{ order.phone }}
+        </p>
+      </div>
+      <div class="box">
+        <h2>From</h2>
+        <p>
+          <strong>Zakayo Industries SMC Ltd</strong><br>
+          Plot 264, Block 424, Ntenjeru<br>
+          Ntenjeru-Kisoga TC, Mukono District, Uganda<br>
+          P.O. Box 150323, Mukono<br>
+          Tel: +256 775 720950
+        </p>
+        {% if order.notes %}<p style="margin-top:8px"><strong>Delivery notes:</strong> {{ order.notes }}</p>{% endif %}
+      </div>
+    </section>
+
+    <table>
+      <thead><tr><th>Qty</th><th>Product</th><th>SKU</th><th>Pack</th><th>Checked</th></tr></thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td class="qty">{{ item.quantity }}</td>
+          <td>{{ item.product_name }}</td>
+          <td style="font-family:ui-monospace,Consolas,monospace;font-size:12px">{{ item.sku }}</td>
+          <td>{{ item.unit }}</td>
+          <td class="check"><span class="tick"></span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <section class="qr">
+      {{ qr_svg|safe }}
+      <div>
+        <h2>Confirm your delivery</h2>
+        <p><strong>Scan this QR code with your phone camera</strong> when you receive your order, check the items, and tap
+          <em>“I’ve received my order”</em>. You’ll get a confirmation email.</p>
+        <p class="url">{{ tracking_url }}</p>
+      </div>
+    </section>
+
+    <section class="sign">
+      <div>Received by (name)</div>
+      <div>Signature</div>
+      <div>Date</div>
+    </section>
+
+    <footer>
+      ISO 13485:2016 · ISO 9001:2015 · NDA licensed manufacturer.
+      Questions about this delivery? Call +256 775 720950 or email snaggayi@human.ug and quote {{ order.reference }}.
+    </footer>
+  </main>
+</body>
+</html>
