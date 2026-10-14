@@ -1,0 +1,22 @@
+{% extends "emails/base.html" %}
+{% load humanize %}
+{% comment %}
+  Sent when a product someone asked about (POST /api/products/<slug>/notify-me/) is back in stock.
+  Context: product (shop.models.Product), product_url, site_url, logo_url.
+{% endcomment %}
+{% block title %}Back in stock: {{ product.name }}{% endblock %}
+{% block preheader %}{{ product.name }} is available to order again.{% endblock %}
+{% block content %}
+<p style="margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#C9081D;">Back in stock</p>
+<h1 style="margin:0 0 16px;font-size:26px;color:#043A80;">{{ product.name }} is available again</h1>
+<p style="margin:0 0 20px;font-size:15px;line-height:1.6;">You asked us to let you know when this product was back. It’s in stock now and ready to order.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#EEF2F8;border-radius:8px;">
+  <tr><td style="padding:16px;font-size:14px;line-height:1.6;">
+    <strong>{{ product.name }}</strong><br>
+    {{ product.unit }}<br>
+    <span style="color:#043A80;font-weight:700;">UGX {{ product.price_ugx|intcomma }}</span>
+  </td></tr>
+</table>
+<p style="margin:24px 0 0;"><a href="{{ product_url }}" style="display:inline-block;background:#043A80;color:#FFFFFF;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:8px;">Order now</a></p>
+<p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#5b6472;">This was a one-time alert. You won’t receive further emails about this product.</p>
+{% endblock %}

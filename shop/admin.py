@@ -16,7 +16,7 @@ from import_export.admin import ExportMixin, ImportExportModelAdmin
 from . import emails
 from .models import (
     REGULATORY_CHOICES, Category, ContactMessage, Customer, EmailLog, NewsletterSubscriber, Order, OrderItem, Product,
-    QuoteRequest,
+    QuoteRequest, StockAlert,
 )
 
 STATUS_COLOURS = {
@@ -179,7 +179,14 @@ class ProductAdmin(ImportExportModelAdmin):
 
     @admin.action(description='Mark in stock')
     def mark_in_stock(self, request, queryset):
-        self.message_user(request, f'{queryset.update(in_stock=True)} product(s) marked in stock.')
+        # Save one by one (not .update()) so customers waiting on a product get their "back in stock" email.
+        products = list(queryset.filter(in_stock=False))
+        for product in products:
+            product.in_stock = True
+            product.save(update_fields=['in_stock', 'updated_at'])
+        waiting = StockAlert.objects.filter(product__in=products, notified_at__isnull=True).count()
+        note = f' {waiting} waiting customer(s) will be emailed.' if waiting else ''
+        self.message_user(request, f'{len(products)} product(s) marked in stock.{note}')
 
     @admin.action(description='Mark out of stock')
     def mark_out_of_stock(self, request, queryset):
@@ -454,7 +461,7 @@ class OrderAdmin(ExportMixin, admin.ModelAdmin):
         items = format_html_join(
             '', '<li>{} · {} · {}</li>',
             (
-                (timezone.localtime(log.created_at).strftime('%d %b %Y %H:%M'), log.subject, 'sent' if log.sent else 'FAILED')
+                (timezone.localtime(log.created_at).strftime('%d %b %Y %H:%M'), log.subject, log.get_status_display())
                 for log in logs
             ),
         )
@@ -631,12 +638,46 @@ class NewsletterSubscriberAdmin(ExportMixin, admin.ModelAdmin):
         queryset.update(is_active=False)
 
 
+@admin.register(StockAlert)
+class StockAlertAdmin(ExportMixin, admin.ModelAdmin):
+    list_display = ('email', 'product', 'created_at', 'notified_at')
+    list_filter = (('notified_at', admin.EmptyFieldListFilter), 'product')
+    search_fields = ('email', 'product__name', 'product__sku')
+    list_select_related = ('product',)
+    readonly_fields = ('product', 'email', 'created_at', 'notified_at')
+
+    def has_add_permission(self, request):
+        return False
+
+
 @admin.register(EmailLog)
 class EmailLogAdmin(admin.ModelAdmin):
-    list_display = ('created_at', 'to', 'subject', 'template', 'related_object', 'sent')
-    list_filter = ('sent', 'template', 'created_at')
+    list_display = ('created_at', 'to', 'subject', 'template', 'related_object', 'status_badge', 'attempts')
+    list_filter = ('status', 'template', 'created_at')
     search_fields = ('to', 'subject', 'related_object')
-    readonly_fields = [f.name for f in EmailLog._meta.fields]
+    fields = (
+        'created_at', 'to', 'reply_to', 'subject', 'template', 'related_object',
+        'status', 'attempts', 'sent_at', 'error', 'text_body',
+    )
+    readonly_fields = fields
+    actions = ('resend',)
+
+    STATUS_COLOURS = {EmailLog.Status.QUEUED: '#9a6700', EmailLog.Status.SENT: '#1a7f37', EmailLog.Status.FAILED: '#c9081d'}
+
+    @admin.display(description='Status', ordering='status')
+    def status_badge(self, obj):
+        return format_html('<strong style="color:{}">{}</strong>', self.STATUS_COLOURS[obj.status], obj.get_status_display())
+
+    @admin.action(description='Resend selected emails', permissions=['resend'])
+    def resend(self, request, queryset):
+        count = 0
+        for log in queryset:
+            emails.queue_delivery(log)
+            count += 1
+        self.message_user(request, f'{count} email(s) queued for sending.', messages.SUCCESS)
+
+    def has_resend_permission(self, request):
+        return request.user.has_perm('shop.view_emaillog')
 
     def has_add_permission(self, request):
         return False

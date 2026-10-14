@@ -330,6 +330,9 @@ SITE_URL = os.environ.get('SITE_URL', 'http://localhost:5173').rstrip('/')
 BACKEND_URL = os.environ.get('BACKEND_URL', 'http://127.0.0.1:8000').rstrip('/')
 # Absolute URL of the PNG logo shown at the top of every email.
 EMAIL_LOGO_URL = os.environ.get('EMAIL_LOGO_URL', f'{BACKEND_URL}{STATIC_URL}shop/email-logo.png')
+# Send shop emails from the Celery worker (needs Redis + `celery -A main worker`).
+# 0 = send during the request, e.g. when no worker is running.
+EMAIL_IN_BACKGROUND = env_bool('EMAIL_IN_BACKGROUND', True)
 # Who gets "new order / quote / message" alerts (comma-separated).
 SALES_NOTIFICATION_EMAILS = env_list('SALES_NOTIFICATION_EMAILS')
 # Where customer replies to shop emails should go (comma-separated). Empty = the From address.
@@ -344,6 +347,9 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
+# Fail fast when Redis is unreachable; emails then fall back to sending inline.
+CELERY_BROKER_CONNECTION_TIMEOUT = 2
+CELERY_BROKER_TRANSPORT_OPTIONS = {'socket_connect_timeout': 2, 'socket_timeout': 5}
 
 
 # Production hardening (only applied when DEBUG is off)

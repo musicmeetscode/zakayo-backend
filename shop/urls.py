@@ -8,6 +8,7 @@ router.register('products', views.ProductViewSet, basename='product')
 
 urlpatterns = [
     *router.urls,
+    path('products/<slug:slug>/notify-me/', views.StockAlertCreateView.as_view(), name='product-notify-me'),
     path('categories/', views.CategoryListView.as_view(), name='category-list'),
     path('orders/', views.OrderCreateView.as_view(), name='order-create'),
     path('orders/<str:reference>/', views.OrderTrackingView.as_view(), name='order-tracking'),

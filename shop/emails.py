@@ -2,11 +2,13 @@ import logging
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
+from django.db import transaction
 from django.template import TemplateDoesNotExist
 from django.template.loader import render_to_string
+from django.utils import timezone
 from django.utils.html import strip_tags
 
-from .models import EmailLog
+from .models import EmailLog, StockAlert
 
 logger = logging.getLogger(__name__)
 
@@ -20,37 +22,80 @@ def _base_context():
 
 def send_templated_email(template, to, subject, context=None, related_object='', reply_to=None):
     """
-    Render emails/<template>.html (+ .txt when present, else a stripped-HTML fallback) and send it.
-    Never raises: failures are logged to EmailLog so a broken mail server can't break checkout.
-    Returns True when the message was handed to the mail backend.
+    Render emails/<template>.html (+ .txt when present, else a stripped-HTML fallback), store it
+    in EmailLog and hand it to the background worker (see deliver()).
+    Never raises: failures are recorded on the EmailLog so a broken mail server can't break checkout.
+    Returns True when the message was queued (or sent, when EMAIL_IN_BACKGROUND is off).
     """
     recipients = [to] if isinstance(to, str) else [r for r in to if r]
     if not recipients:
         return False
 
     ctx = {**_base_context(), **(context or {})}
-    log = EmailLog(to=', '.join(recipients), subject=subject, template=template, related_object=related_object)
+    reply_to = reply_to or settings.SHOP_REPLY_TO or []
+    log = EmailLog(
+        to=', '.join(recipients), reply_to=', '.join(reply_to), subject=subject, template=template,
+        related_object=related_object,
+    )
     try:
-        html = render_to_string(f'emails/{template}.html', ctx)
+        log.html_body = render_to_string(f'emails/{template}.html', ctx)
         try:
-            text = render_to_string(f'emails/{template}.txt', ctx)
+            log.text_body = render_to_string(f'emails/{template}.txt', ctx)
         except TemplateDoesNotExist:
-            text = strip_tags(html)
-        message = EmailMultiAlternatives(
-            subject=subject,
-            body=text,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=recipients,
-            reply_to=reply_to or settings.SHOP_REPLY_TO or None,
-        )
-        message.attach_alternative(html, 'text/html')
-        message.send()
-        log.sent = True
-    except Exception as exc:  # noqa: BLE001 — any mail failure must be recorded, not raised
-        logger.exception('Failed to send %s email to %s', template, recipients)
-        log.error = str(exc)
+            log.text_body = strip_tags(log.html_body)
+    except Exception as exc:  # noqa: BLE001 — a template bug must not break the request
+        logger.exception('Failed to render %s email', template)
+        log.status, log.error = EmailLog.Status.FAILED, str(exc)
+        log.save()
+        return False
+
     log.save()
-    return log.sent
+    return queue_delivery(log)
+
+
+def queue_delivery(log):
+    """Send in the background once the surrounding transaction commits (or inline, if configured)."""
+    if log.status != EmailLog.Status.QUEUED:
+        EmailLog.objects.filter(pk=log.pk).update(status=EmailLog.Status.QUEUED, error='')
+        log.status = EmailLog.Status.QUEUED
+    if not settings.EMAIL_IN_BACKGROUND:
+        return deliver(log)
+    transaction.on_commit(lambda: _enqueue(log))
+    return True
+
+
+def _enqueue(log):
+    from .tasks import deliver_email
+
+    try:
+        # retry=False: fail fast if the broker is down instead of blocking the request.
+        deliver_email.apply_async((log.pk,), retry=False)
+    except Exception:  # noqa: BLE001 — broker unreachable: don't lose the email, send it now
+        logger.warning('Email queue unavailable; sending email #%s inline', log.pk, exc_info=True)
+        deliver(log)
+
+
+def deliver(log):
+    """Send a stored EmailLog through the mail backend. Records the outcome; returns True on success."""
+    log.attempts += 1
+    try:
+        message = EmailMultiAlternatives(
+            subject=log.subject,
+            body=log.text_body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=log.recipients,
+            reply_to=log.reply_to_list or None,
+        )
+        message.attach_alternative(log.html_body, 'text/html')
+        message.send()
+    except Exception as exc:  # noqa: BLE001 — any mail failure must be recorded, not raised
+        logger.exception('Failed to send email #%s (%s) to %s', log.pk, log.template, log.to)
+        log.status, log.error = EmailLog.Status.FAILED, str(exc)
+        log.save(update_fields=['attempts', 'status', 'error'])
+        return False
+    log.status, log.error, log.sent_at = EmailLog.Status.SENT, '', timezone.now()
+    log.save(update_fields=['attempts', 'status', 'error', 'sent_at'])
+    return True
 
 
 # --- Order emails -----------------------------------------------------------
@@ -113,6 +158,22 @@ def send_delivery_confirmed(order):
         ],
         f'shop/order/{order.pk}/change/',
     )
+
+
+def send_back_in_stock(product):
+    """Email everyone waiting for this product (one email each), then mark their alerts as done."""
+    product.refresh_from_db()
+    if not (product.in_stock and product.is_active and not product.quote_only):
+        return 0
+    alerts = list(product.stock_alerts.filter(notified_at__isnull=True))
+    for alert in alerts:
+        send_templated_email(
+            'back_in_stock', alert.email, f'Back in stock: {product.name}',
+            {'product': product, 'product_url': f'{settings.SITE_URL}/shop/{product.slug}'},
+            related_object=f'stock alert #{alert.pk}',
+        )
+    StockAlert.objects.filter(pk__in=[a.pk for a in alerts]).update(notified_at=timezone.now())
+    return len(alerts)
 
 
 # --- Quotes, contact, ad-hoc ------------------------------------------------

@@ -9,7 +9,7 @@ from rest_framework.test import APITestCase
 from rest_framework.throttling import ScopedRateThrottle
 
 from accounts.models import CustomUser
-from shop.models import Category, ContactMessage, Customer, CustomerLookupCode, EmailLog, NewsletterSubscriber, Order, Product, QuoteRequest
+from shop.models import Category, ContactMessage, Customer, CustomerLookupCode, EmailLog, NewsletterSubscriber, Order, Product, QuoteRequest, StockAlert
 
 STAFF_EMAILS = ['sales@zakayo.test']
 
@@ -30,7 +30,8 @@ def order_payload(**overrides):
     return payload
 
 
-@override_settings(SALES_NOTIFICATION_EMAILS=STAFF_EMAILS)
+# Emails are sent inline in most tests; BackgroundEmailTests covers the Celery path.
+@override_settings(SALES_NOTIFICATION_EMAILS=STAFF_EMAILS, EMAIL_IN_BACKGROUND=False)
 class ShopTestCase(APITestCase):
     def setUp(self):
         cache.clear()  # reset throttling between tests
@@ -92,7 +93,7 @@ class OrderTests(ShopTestCase):
         self.assertEqual([m.to for m in mail.outbox], [['amina@clinic.ug'], STAFF_EMAILS])
         self.assertIn(order.reference, mail.outbox[0].subject)
         self.assertIn('HIV Test Kit', mail.outbox[0].alternatives[0][0])
-        self.assertTrue(EmailLog.objects.filter(related_object=f'order {order.reference}', sent=True).exists())
+        self.assertTrue(EmailLog.objects.filter(related_object=f'order {order.reference}', status=EmailLog.Status.SENT).exists())
 
     def test_repeat_customer_is_matched_by_email(self):
         for _ in range(2):
@@ -371,3 +372,104 @@ class CustomerLookupTests(ShopTestCase):
         res = self.lookup('0700 999 999')
         self.assertEqual(res.json()['data'], {'found': False, 'masked_email': ''})
         self.assertEqual(len(mail.outbox), 0)
+
+
+@override_settings(EMAIL_IN_BACKGROUND=True)
+class BackgroundEmailTests(ShopTestCase):
+    def place_order(self):
+        return self.client.post(reverse('order-create'), order_payload(items=[self.line(self.kit)]), format='json')
+
+    def test_emails_are_queued_after_commit_and_sent_by_the_worker(self):
+        with mock.patch('shop.tasks.deliver_email.apply_async') as enqueue:
+            with self.captureOnCommitCallbacks(execute=True):
+                self.place_order()
+        self.assertEqual(enqueue.call_count, 2)  # customer + staff
+        self.assertEqual(len(mail.outbox), 0)  # nothing sent during the request
+        logs = EmailLog.objects.order_by('pk')
+        self.assertTrue(all(log.status == EmailLog.Status.QUEUED and log.html_body for log in logs))
+
+        from shop.tasks import deliver_email
+        for ((log_id,),), _ in enqueue.call_args_list:
+            deliver_email.apply(args=(log_id,))
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(set(EmailLog.objects.values_list('status', flat=True)), {EmailLog.Status.SENT})
+
+    def test_falls_back_to_inline_sending_when_the_queue_is_down(self):
+        with mock.patch('shop.tasks.deliver_email.apply_async', side_effect=ConnectionError('redis down')):
+            with self.captureOnCommitCallbacks(execute=True):
+                self.place_order()
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(set(EmailLog.objects.values_list('status', flat=True)), {EmailLog.Status.SENT})
+
+    def test_worker_retries_failed_sends_and_records_the_error(self):
+        from shop.emails import send_templated_email
+        from shop.tasks import deliver_email
+
+        with mock.patch('shop.tasks.deliver_email.apply_async'), self.captureOnCommitCallbacks(execute=True):
+            send_templated_email('custom_message', 'a@b.ug', 'Hi', {'name': 'A', 'body': 'x'})
+        log = EmailLog.objects.get()
+        # Eager mode runs the retries immediately: 1 attempt + 4 retries, then it gives up.
+        with mock.patch('django.core.mail.EmailMultiAlternatives.send', side_effect=OSError('smtp down')):
+            deliver_email.apply(args=(log.pk,))
+        log.refresh_from_db()
+        self.assertEqual((log.status, log.attempts, log.error), (EmailLog.Status.FAILED, 5, 'smtp down'))
+
+        deliver_email.apply(args=(log.pk,))  # mail server back (e.g. "Resend" in the admin)
+        log.refresh_from_db()
+        self.assertEqual((log.status, log.attempts, log.error), (EmailLog.Status.SENT, 6, ''))
+        self.assertIsNotNone(log.sent_at)
+
+
+class StockAlertTests(ShopTestCase):
+    def setUp(self):
+        super().setUp()
+        self.kit.in_stock = False
+        self.kit.save()
+
+    def notify(self, product=None, email='nurse@clinic.ug'):
+        url = reverse('product-notify-me', args=[(product or self.kit).slug])
+        return self.client.post(url, {'email': email}, format='json')
+
+    def test_signing_up_is_idempotent(self):
+        self.assertEqual(self.notify().status_code, status.HTTP_201_CREATED)
+        self.assertEqual(self.notify(email='NURSE@clinic.ug').status_code, status.HTTP_201_CREATED)
+        self.assertEqual(StockAlert.objects.filter(email='nurse@clinic.ug').count(), 1)
+
+    def test_rejects_products_that_can_be_ordered(self):
+        res = self.notify(product=self.lancets)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(StockAlert.objects.exists())
+
+    def test_restocking_emails_everyone_waiting_once(self):
+        self.notify()
+        self.notify(email='lab@hospital.ug')
+        with self.captureOnCommitCallbacks(execute=True):
+            self.kit.in_stock = True
+            self.kit.save()
+        self.assertEqual(sorted(m.to[0] for m in mail.outbox), ['lab@hospital.ug', 'nurse@clinic.ug'])
+        self.assertIn('Back in stock: HIV Test Kit', mail.outbox[0].subject)
+        self.assertIn(f'/shop/{self.kit.slug}', mail.outbox[0].body)
+        self.assertFalse(StockAlert.objects.filter(notified_at__isnull=True).exists())
+
+        # Saving again (still in stock) or another restock later doesn't re-email the same people.
+        with self.captureOnCommitCallbacks(execute=True):
+            self.kit.save()
+            self.kit.in_stock = False
+            self.kit.save()
+            self.kit.in_stock = True
+            self.kit.save()
+        self.assertEqual(len(mail.outbox), 2)
+
+    def test_admin_bulk_action_triggers_alerts(self):
+        self.notify()
+        admin_user = CustomUser.objects.create_superuser(email='boss@zakayo.test', password='pass12345')
+        self.client.force_login(admin_user)
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(
+                reverse('admin:shop_product_changelist'),
+                {'action': 'mark_in_stock', '_selected_action': [self.kit.pk]},
+            )
+        self.kit.refresh_from_db()
+        self.assertTrue(self.kit.in_stock)
+        self.assertEqual([m.to for m in mail.outbox], [['nurse@clinic.ug']])
+

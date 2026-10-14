@@ -11,7 +11,7 @@ from .models import Category, Customer, CustomerLookupCode, Order, Product
 from .serializers import (
     CategorySerializer, ConfirmDeliverySerializer, ContactMessageSerializer, CustomerLookupSerializer,
     CustomerVerifySerializer, NewsletterSerializer, OrderCreateSerializer, ProductSerializer, QuoteRequestSerializer,
-    SavedCustomerSerializer, TrackedOrderSerializer,
+    SavedCustomerSerializer, StockAlertSerializer, TrackedOrderSerializer,
 )
 
 
@@ -92,6 +92,23 @@ class NewsletterSubscribeView(PublicCreateView):
         # Re-subscribing is fine and must not reveal whether an address was already on the list.
         super().create(request, *args, **kwargs)
         return Response({'message': 'Subscribed.'}, status=status.HTTP_201_CREATED)
+
+
+class StockAlertCreateView(PublicCreateView):
+    """`POST /api/products/<slug>/notify-me/` — email me when this out-of-stock product is back."""
+
+    serializer_class = StockAlertSerializer
+
+    def get_serializer_context(self):
+        product = get_object_or_404(Product.objects.published(), slug=self.kwargs['slug'])
+        if product.in_stock or product.quote_only:
+            raise ValidationError({'email': 'This product is available to order now.'})
+        return {**super().get_serializer_context(), 'product': product}
+
+    def create(self, request, *args, **kwargs):
+        super().create(request, *args, **kwargs)
+        # Same reply whether or not the address was already waiting.
+        return Response({'message': 'We’ll email you when it’s back in stock.'}, status=status.HTTP_201_CREATED)
 
 
 class TrackedOrderMixin:

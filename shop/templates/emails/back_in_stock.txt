@@ -1,0 +1,10 @@
+{{ product.name }} is back in stock
+
+You asked us to let you know when this product was back. It's in stock now and ready to order.
+
+{{ product.name }} — {{ product.unit }}
+Order now: {{ product_url }}
+
+This was a one-time alert. You won't receive further emails about this product.
+
+Zakayo Industries SMC Ltd

@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
 from django.utils.text import slugify
 
@@ -128,7 +128,15 @@ class Product(TimeStampedModel):
             while Product.objects.filter(slug=slug).exclude(pk=self.pk).exists():
                 slug, n = f'{base}-{n}', n + 1
             self.slug = slug
+        restocked = (
+            self.pk is not None and self.in_stock
+            and Product.objects.filter(pk=self.pk, in_stock=False).exists()
+        )
         super().save(*args, **kwargs)
+        if restocked:
+            from .emails import send_back_in_stock  # emails imports models
+
+            transaction.on_commit(lambda: send_back_in_stock(self))
 
 
 def phone_key(phone):
@@ -455,19 +463,60 @@ class NewsletterSubscriber(TimeStampedModel):
         return self.email
 
 
+class StockAlert(models.Model):
+    """A visitor asked to be emailed when an out-of-stock product is available again."""
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='stock_alerts')
+    email = models.EmailField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    notified_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ('-created_at',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=('product', 'email'), condition=models.Q(notified_at__isnull=True), name='one_pending_alert_per_email',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.email} → {self.product.name}'
+
+
 class EmailLog(models.Model):
-    """Every email the shop sends, for support and auditing."""
+    """
+    Every email the shop sends, for support and auditing. The rendered message is stored here
+    and delivered by a background task, so it can be retried or resent without re-rendering.
+    """
+
+    class Status(models.TextChoices):
+        QUEUED = 'queued', 'Queued'
+        SENT = 'sent', 'Sent'
+        FAILED = 'failed', 'Failed'
 
     created_at = models.DateTimeField(auto_now_add=True)
     to = models.CharField(max_length=500)
+    reply_to = models.CharField(max_length=500, blank=True)
     subject = models.CharField(max_length=255)
     template = models.CharField(max_length=100)
     related_object = models.CharField(max_length=100, blank=True, help_text='e.g. order ZI-251013-AB12')
-    sent = models.BooleanField(default=False)
+    text_body = models.TextField(blank=True)
+    html_body = models.TextField(blank=True)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.QUEUED, db_index=True)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    sent_at = models.DateTimeField(null=True, blank=True)
     error = models.TextField(blank=True)
 
     class Meta:
         ordering = ('-created_at',)
+
+    @property
+    def recipients(self):
+        return [r.strip() for r in self.to.split(',') if r.strip()]
+
+    @property
+    def reply_to_list(self):
+        return [r.strip() for r in self.reply_to.split(',') if r.strip()]
 
     def __str__(self):
         return f'{self.subject} → {self.to}'

@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from .models import (
     COUNTRY_CHOICES, CUSTOMER_TYPE_CHOICES, Category, ContactMessage, Customer, NewsletterSubscriber, Order,
-    OrderItem, Product, QuoteRequest,
+    OrderItem, Product, QuoteRequest, StockAlert,
 )
 
 PHONE_REGEX = r'^\+?[0-9 ()-]{9,20}$'
@@ -196,6 +196,16 @@ class ContactMessageSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return {'id': instance.pk}
+
+
+class StockAlertSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def create(self, validated_data):
+        alert, _ = StockAlert.objects.get_or_create(
+            product=self.context['product'], email=validated_data['email'].lower(), notified_at=None,
+        )
+        return alert
 
 
 class NewsletterSerializer(serializers.Serializer):

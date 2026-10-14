@@ -11,7 +11,7 @@ A starter project for building REST APIs with Django and Django REST Framework.
 * **Consistent responses**: every endpoint returns `{success, status_code, message, data, errors}`.
 * **Secure defaults**: endpoints require authentication unless marked public, auth endpoints are rate limited, and production hardening applies when `DEBUG=0`.
 * **API docs** with Swagger and ReDoc (`drf-yasg`).
-* **Celery + Redis** for background tasks.
+* **Celery + Redis** for background tasks. Shop emails are sent by the worker, with retries (see below).
 * **SQLite, Postgres or MySQL**, chosen with one environment variable.
 * **Docker**: a production image, plus a `docker-compose.yml` with web, Postgres, Redis, a Celery worker and beat.
 * **Health checks** at `/health/` (liveness) and `/ready/` (checks the database).
@@ -147,6 +147,7 @@ To give a colleague access: Users → add user → tick **Staff status** → add
 | POST | `/api/quote-requests/` | Quote request; emails customer + sales |
 | POST | `/api/contact/` | Contact form; emails customer + sales |
 | POST | `/api/newsletter/` | Subscribe (idempotent) |
+| POST | `/api/products/{slug}/notify-me/` | Body `{ email }`. "Back in stock" alert for an out-of-stock product; everyone waiting is emailed once when it is marked in stock (form, bulk action or import). Listed under **Stock alerts** in the admin |
 
 Validation errors include `field_errors: {"customer.email": [...]}` alongside the flat `errors` list.
 
@@ -167,3 +168,16 @@ Validation errors include `field_errors: {"customer.email": [...]}` alongside th
 - **Email log** — every email sent, with failures.
 
 Emails live in `shop/templates/emails/`. Locally they print to the console; set the SMTP variables in `.env` to send.
+
+## Emails
+
+Shop emails (order confirmations, status updates, quotes, replies, sign-in codes) are rendered during the request,
+saved to **Email log** in the admin, and sent by the Celery worker once the database transaction commits. The
+request never waits for the mail server.
+
+* Run a worker: `celery -A main worker -l info` (`./run_dev.sh` and `docker-compose.yml` already do).
+* Failed sends retry after 1, 2, 4 and 8 minutes. Each log shows its status (queued / sent / failed), attempts and
+  last error. Select logs and use **Resend selected emails** to try again.
+* If Redis is unreachable, the email is sent during the request instead, so nothing is lost.
+* `EMAIL_IN_BACKGROUND=0` always sends during the request, for setups without a worker.
+
