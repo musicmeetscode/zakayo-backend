@@ -111,6 +111,8 @@ ASGI_APPLICATION = 'main.asgi.application'
 # DB_CHOICE=sqlite (default) uses a local file.
 # DB_CHOICE=postgres reads the connection from DATABASE_URL,
 # e.g. postgres://user:password@host:5432/dbname
+# DB_CHOICE=mysql reads DB_NAME, DB_USER, DB_PASSWORD, DB_HOST and DB_PORT
+# (MySQL 8.0.11+ or MariaDB 10.6+).
 
 DB_CHOICE = os.environ.get('DB_CHOICE', 'sqlite').strip().lower()
 if DB_CHOICE == 'sqlite':
@@ -126,8 +128,31 @@ elif DB_CHOICE in ('postgres', 'postgresql'):
     DATABASES = {
         'default': dj_database_url.config(conn_max_age=600, conn_health_checks=True)
     }
+elif DB_CHOICE in ('mysql', 'mariadb'):
+    missing = [name for name in ('DB_NAME', 'DB_USER') if not os.environ.get(name)]
+    if missing:
+        raise ValueError(f"DB_CHOICE=mysql requires {', '.join(missing)} to be set")
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ['DB_NAME'],
+            'USER': os.environ['DB_USER'],
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+            'PORT': os.environ.get('DB_PORT', '3306'),
+            'CONN_MAX_AGE': 600,
+            'CONN_HEALTH_CHECKS': True,
+            'OPTIONS': {
+                # utf8mb4 stores every Unicode character (names, emoji); strict mode
+                # rejects bad data instead of silently truncating it.
+                'charset': 'utf8mb4',
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+            'TEST': {'CHARSET': 'utf8mb4', 'COLLATION': 'utf8mb4_unicode_ci'},
+        }
+    }
 else:
-    raise ValueError(f"Unsupported DB_CHOICE: {DB_CHOICE!r} (use 'sqlite' or 'postgres')")
+    raise ValueError(f"Unsupported DB_CHOICE: {DB_CHOICE!r} (use 'sqlite', 'postgres' or 'mysql')")
 
 
 # Django REST Framework

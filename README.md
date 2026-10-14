@@ -12,7 +12,7 @@ A starter project for building REST APIs with Django and Django REST Framework.
 * **Secure defaults**: endpoints require authentication unless marked public, auth endpoints are rate limited, and production hardening applies when `DEBUG=0`.
 * **API docs** with Swagger and ReDoc (`drf-yasg`).
 * **Celery + Redis** for background tasks.
-* **SQLite or Postgres**, chosen with one environment variable.
+* **SQLite, Postgres or MySQL**, chosen with one environment variable.
 * **Docker**: a production image, plus a `docker-compose.yml` with web, Postgres, Redis, a Celery worker and beat.
 * **Health checks** at `/health/` (liveness) and `/ready/` (checks the database).
 
@@ -68,7 +68,7 @@ All settings come from environment variables. The full list is in [.env.example]
 | `SECRET_KEY` | (required) | `python generate_key.py` |
 | `DEBUG` | `0` | `1` for local development |
 | `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, `CSRF_TRUSTED_ORIGINS` | empty | comma separated |
-| `DB_CHOICE` | `sqlite` | `postgres` requires `DATABASE_URL` |
+| `DB_CHOICE` | `sqlite` | `postgres` requires `DATABASE_URL`; `mysql` requires `DB_NAME`, `DB_USER`, `DB_PASSWORD` (plus `DB_HOST`, `DB_PORT`, default `127.0.0.1:3306`) |
 | `REQUIRE_EMAIL_VERIFICATION` | `0` | block login until the email is verified |
 | `EMAIL_BACKEND` | console | set to the SMTP backend to send real email |
 | `GOOGLE_CLIENT_ID`, `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET` | empty | required for social login |

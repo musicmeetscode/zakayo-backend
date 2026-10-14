@@ -14,6 +14,7 @@ pillow
 celery
 redis
 psycopg[binary]
+mysqlclient
 google-auth
 requests
 uvicorn

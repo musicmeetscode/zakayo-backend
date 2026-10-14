@@ -68,6 +68,7 @@ class CatalogueTests(ShopTestCase):
         self.assertEqual(res.json()['data']['sku'], 'KIT-25')
 
     def test_categories(self):
+        Category.objects.create(slug='empty', label='Nothing published yet')
         res = self.client.get(reverse('category-list'))
         self.assertEqual(res.json()['data'], [{'id': 'rapid-tests', 'label': 'Rapid Tests', 'description': ''}])
 

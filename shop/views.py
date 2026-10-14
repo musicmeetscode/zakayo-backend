@@ -40,7 +40,10 @@ class CategoryListView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
     pagination_class = None
-    queryset = Category.objects.all()
+
+    def get_queryset(self):
+        # Only categories with something to show, so the site never links to an empty page.
+        return Category.objects.filter(products__in=Product.objects.published()).distinct()
 
 
 class PublicCreateView(generics.CreateAPIView):

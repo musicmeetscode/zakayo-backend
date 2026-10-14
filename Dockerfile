@@ -5,6 +5,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
+# Build tools and headers for mysqlclient
+RUN apt-get update && apt-get install -y --no-install-recommends gcc pkg-config default-libmysqlclient-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
@@ -17,6 +21,10 @@ FROM python:3.13-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
+
+# MySQL client runtime library for mysqlclient
+RUN apt-get update && apt-get install -y --no-install-recommends libmariadb3 \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN useradd --create-home --uid 1000 app
 
